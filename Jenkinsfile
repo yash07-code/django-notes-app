@@ -26,9 +26,10 @@ pipeline {
         stage("Push to DockerHub") {
             steps {
                 script {
-                    withDockerRegistry([credentialsId: 'dockerHubCreds', url: '']) {
-                        sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
-                        sh "docker push ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
+                  withDockerRegistry([credentialsId: 'docker-credentials', url: 'https://index.docker.io/v1/']) {
+                         sh 'docker push my-image:latest'
+                       }
+
                     }
                 }
             }
