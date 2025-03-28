@@ -1,29 +1,46 @@
+pipeline {
+    agent { label 'dev-server' }
 
-pipeline{
-    agent { label 'dev-server'}
-    
-    stages{
-        stage("Code clone"){
-            steps{
+    environment {
+        IMAGE_NAME = "notes-app"
+        IMAGE_TAG = "latest"
+        DOCKER_HUB_REPO = "your-dockerhub-username/notes-app"
+    }
+
+    stages {
+        stage("Code Clone") {
+            steps {
                 sh "whoami"
-            clone("https://github.com/LondheShubham153/django-notes-app.git","main")
+                git branch: 'main', url: 'https://github.com/yash07-code/django-notes-app.git'
             }
         }
-        stage("Code Build"){
-            steps{
-            dockerbuild("notes-app","latest")
+
+        stage("Code Build") {
+            steps {
+                script {
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
             }
         }
-        stage("Push to DockerHub"){
-            steps{
-                dockerpush("dockerHubCreds","notes-app","latest")
+
+        stage("Push to DockerHub") {
+            steps {
+                script {
+                    withDockerRegistry([credentialsId: 'dockerHubCreds', url: '']) {
+                        sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
+                        sh "docker push ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
+                    }
+                }
             }
         }
-        stage("Deploy"){
-            steps{
-                deploy()
+
+        stage("Deploy") {
+            steps {
+                script {
+                    sh "./deploy.sh" // Ensure deploy.sh exists and has executable permissions
+                }
             }
         }
-        
     }
 }
+
